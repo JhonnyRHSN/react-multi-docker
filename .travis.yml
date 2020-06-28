@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+ - docker
+
+before_install:
+ - docker build -t react-multi-docker -f ./client/Dockerfile.dev ./client
+    
+script:
+ - docker run -e CI=true react-multi-docker npm run test -- --coverage
+
+after_success:
+ - docker build -t jhonny-multi-client ./client
+ - docker build -t jhonny-multi-nginx ./nginx
+ - docker build -t jhonny-multi-server ./server
+ - docker build -t jhonny-multi-worker ./worker 
+ # Log into the docker CLI
+ - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+ # Take those images and push them to docker hub
+ - docker push jhonny-multi-client
+ - docker push jhonny-multi-nginx
+ - docker push jhonny-multi-server
+ - docker push jhonny-multi-worker
